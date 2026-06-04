@@ -6,6 +6,10 @@ on:
       releaseBranch:
         description: 'Release Branch (releases/mXXX)'
         required: true
+      tagSuffix:
+        description: 'Optional image tag suffix (e.g. "hooksfix" → 2.333.1-hooksfix)'
+        required: false
+        default: ''
 
 jobs:
   publish-image:
@@ -26,7 +30,9 @@ jobs:
 
       - name: Compute image version
         id: image
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
+        env:
+          TAG_SUFFIX: ${{ github.event.inputs.tagSuffix }}
         with:
           script: |
             const fs = require('fs');
@@ -35,7 +41,13 @@ jobs:
             if (!/^\d+\.\d+\.\d+$/.test(runnerVersion)) {
               throw new Error(`Invalid runner version: ${runnerVersion}`);
             }
+            const suffix = (process.env.TAG_SUFFIX || '').trim();
+            if (suffix && !/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(suffix)) {
+              throw new Error(`Invalid tag suffix: ${suffix}`);
+            }
+            const imageTag = suffix ? `${runnerVersion}-${suffix}` : runnerVersion;
             core.setOutput('version', runnerVersion);
+            core.setOutput('tag', imageTag);
 
       - name: Setup Docker buildx
         uses: docker/setup-buildx-action@v4
@@ -56,7 +68,7 @@ jobs:
             linux/amd64
             linux/arm64
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.image.outputs.version }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.image.outputs.tag }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
           build-args: |
             RUNNER_VERSION=${{ steps.image.outputs.version }}

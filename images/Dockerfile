@@ -4,7 +4,9 @@ FROM mcr.microsoft.com/dotnet/runtime-deps:8.0-noble AS build
 ARG TARGETOS
 ARG TARGETARCH
 ARG RUNNER_VERSION
-ARG RUNNER_CONTAINER_HOOKS_VERSION=0.7.0
+ARG RUNNER_CONTAINER_HOOKS_REPO=oradwell/runner-container-hooks
+ARG RUNNER_CONTAINER_HOOKS_VERSION=0.7.1-alpha
+ARG RUNNER_CONTAINER_HOOKS_NOVOLUME_VERSION=0.8.2-alpha
 ARG DOCKER_VERSION=29.3.0
 ARG BUILDX_VERSION=0.32.1
 
@@ -17,11 +19,11 @@ RUN export RUNNER_ARCH=${TARGETARCH} \
     && tar xzf ./runner.tar.gz \
     && rm runner.tar.gz
 
-RUN curl -f -L -o runner-container-hooks.zip https://github.com/actions/runner-container-hooks/releases/download/v${RUNNER_CONTAINER_HOOKS_VERSION}/actions-runner-hooks-k8s-${RUNNER_CONTAINER_HOOKS_VERSION}.zip \
+RUN curl -f -L -o runner-container-hooks.zip https://github.com/${RUNNER_CONTAINER_HOOKS_REPO}/releases/download/v${RUNNER_CONTAINER_HOOKS_VERSION}/actions-runner-hooks-k8s-${RUNNER_CONTAINER_HOOKS_VERSION}.zip \
     && unzip ./runner-container-hooks.zip -d ./k8s \
     && rm runner-container-hooks.zip
 
-RUN curl -f -L -o runner-container-hooks.zip https://github.com/actions/runner-container-hooks/releases/download/v0.8.1/actions-runner-hooks-k8s-0.8.1.zip \
+RUN curl -f -L -o runner-container-hooks.zip https://github.com/${RUNNER_CONTAINER_HOOKS_REPO}/releases/download/v${RUNNER_CONTAINER_HOOKS_NOVOLUME_VERSION}/actions-runner-hooks-k8s-${RUNNER_CONTAINER_HOOKS_NOVOLUME_VERSION}.zip \
     && unzip ./runner-container-hooks.zip -d ./k8s-novolume \
     && rm runner-container-hooks.zip
 
